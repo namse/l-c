@@ -1,4 +1,4 @@
-# 1. 파라미터를 받아 사용자가 입력한 종류의 EC2 인스턴스를 만드는 CFm 템플릿 만들기
+# 2. AMI ID를 파라미터로 입력받아 EC2 인스턴스를 만드는 CFm 템플릿 만들기
 
 # 참고 문서 1 : http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/gettingstarted.templatebasics.html
 # 참고 문서 2 : http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
@@ -16,10 +16,15 @@ Parameters:
       - t2.xlarge
       - t2.2xlarge
     Description: Choose t2 instance type model.
+  ImageId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-e21cc38c # Amazon Linux AMI 2017.03.1 (HVM), SSD Volume Type
+    Description: Set AMI ID for EC2 instance.
 Resources:
   Ec2Instance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType:
         Ref: InstanceTypeParameter
-      ImageId: ami-e21cc38c # Amazon Linux AMI 2017.03.1 (HVM), SSD Volume Type
+      ImageId:
+        Ref: ImageId

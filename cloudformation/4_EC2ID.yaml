@@ -1,0 +1,81 @@
+# 3. 구동중인 EC의 ID를 출력하는 람다 소스코드를 zip으로 압축하여 S3에 업로드 하기.
+#    그 후 zip 파일의 S3 URL 주소를 파라미터로 받아 람다 함수를 만들고,
+#    람다 함수에 필요한 IAM Role을 추가하는 CFm 템플릿 만들기
+
+# 참고 문서 1 : http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html
+# 참고 문서 2 : http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-lambda.html
+# 참고 문서 3 : http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-lambda-function-code.html
+# 참고 문서 4 : http://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Handler
+
+Parameters:
+  LambdaFucntionName:
+    Type: String
+    Description: lambda function name.
+  LambdaFucntionDescription:
+    Type: String
+    Description: lambda function description.
+  LambdaFunctionRuntime:
+    Type: String
+    Default: nodejs6.10
+    AllowedValues:
+      - java8
+      - nodejs4.3
+      - nodejs6.10
+      - python2.7
+      - python3.6
+      - dotnetcore1.0
+    Description: lambda function runtime.
+  LambdaFucntionCodeS3Bucket:
+    Type: String
+    Description: S3 bucket name of lambda function code.
+  LambdaFucntionCodeS3Key:
+    Type: String
+    Description: S3 key name of lambda function code.
+  LambdaFunctionHandler:
+    Type: String
+    Default: index.handler
+    Description: lambda function handler.
+Resources:
+  LambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: LambdaFucntionCodeS3Bucket
+        S3Key:
+          Ref: LambdaFucntionCodeS3Key
+      Description:
+        Ref: LambdaFucntionDescription
+      FunctionName:
+        Ref: LambdaFucntionName
+      Handler:
+        Ref: LambdaFunctionHandler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime:
+        Ref: LambdaFunctionRuntime
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - ec2:DescribeInstances
+            Resource: "*"
